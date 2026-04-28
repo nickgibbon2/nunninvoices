@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Invoices">
+<meta name="theme-color" content="#0f1117">
+<title>Invoices</title>
+<style>
+:root {
+  --bg:#f4f5f7;--surface:#ffffff;--surface2:#f0f1f4;--border:#e8eaef;--border2:#d2d6e0;
+  --text:#0d0f14;--text2:#52586a;--text3:#9299ab;
+  --accent:#3b5bdb;--accent-light:#eef2ff;--accent-dark:#2f4ac4;
+  --accent2:#0f9b6e;--accent2-light:#e8faf4;
+  --danger:#e03131;--danger-light:#fff5f5;
+  --amber:#e67700;--amber-light:#fff9ec;
+  --radius:16px;--radius-sm:10px;--radius-xs:7px;
+}
+body.dark-mode {
+  --bg:#0f1117;--surface:#1a1d27;--surface2:#22263a;--border:#2e3248;--border2:#3a4060;
+  --text:#f0f2ff;--text2:#8b92b8;--text3:#555e88;
+  --accent-light:#1a2040;--accent-dark:#5577ff;
+  --accent2-light:#0d2620;
+  --danger-light:#2a0f0f;
+  --amber-light:#2a1800;
+}
+body.dark-mode .nav{background:rgba(26,29,39,0.95);}
+body.dark-mode .modal{background:var(--surface);}
+body.dark-mode .form-input{background:var(--surface2);color:var(--text);}
+body.dark-mode .backup-card{background:var(--accent-light);border-color:var(--border2);}
+body.dark-mode .inv-meta-cell{background:var(--surface2);}
+body.dark-mode .inv-top{background:#111827;}
+body.dark-mode .inv-preview{background:var(--surface);}
+body.dark-mode .inv-payment{background:var(--surface2);}
+body.dark-mode select.form-input option{background:var(--surface2);}
+/* Page transitions */
+.page{display:none;max-width:900px;margin:0 auto;padding:22px 20px 100px;opacity:0;transform:translateY(6px);transition:opacity .18s ease,transform .18s ease;}
+.page.active{display:block;}
+.page.visible{opacity:1;transform:translateY(0);}
+/* Animated number */
+.anim-num{display:inline-block;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s;}
+.nav{background:rgba(255,255,255,0.94);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;overflow-x:auto;-webkit-overflow-scrolling:touch;transition:background .3s;}
+.nav::-webkit-scrollbar{display:none;}
+.nav-inner{display:flex;align-items:center;max-width:900px;margin:0 auto;padding:0 20px;min-width:max-content;}
+.nav-brand{font-size:16px;font-weight:700;color:var(--text);padding:16px 0;margin-right:28px;letter-spacing:-.4px;}
+.nav-tab{padding:16px 13px;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .15s;}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:18px;margin-bottom:12px;}
+.card-title{font-size:13px;font-weight:600;margin-bottom:14px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;cursor:pointer;border:none;transition:all .15s;}
+.btn-primary{background:var(--accent);color:#fff;}.btn-primary:active{background:var(--accent-dark);}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}.btn-secondary:active{background:var(--border);}
+.btn-success{background:var(--accent2);color:#fff;}
+.btn-danger{background:var(--danger-light);color:var(--danger);border:1px solid #ffc9c9;}
+.btn-sm{padding:8px 14px;font-size:13px;}
+.btn-icon{width:36px;height:36px;padding:0;justify-content:center;border-radius:var(--radius-xs);background:var(--surface2);border:1px solid var(--border);font-size:15px;cursor:pointer;}
+.form-group{margin-bottom:14px;}
+.form-label{font-size:11px;font-weight:600;color:var(--text3);margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:.07em;}
+.form-input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;background:var(--surface);color:var(--text);-webkit-appearance:none;transition:border-color .15s;}
+.form-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,91,219,.1);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.client-item{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:15px 16px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:13px;transition:background .12s;}
+.client-item:active{background:var(--surface2);}
+.client-item.archived{opacity:.45;}
+.client-avatar{width:44px;height:44px;border-radius:13px;background:var(--accent-light);color:var(--accent);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:-.3px;}
+.client-info{flex:1;min-width:0;}
+.client-name{font-size:15px;font-weight:600;letter-spacing:-.15px;}
+.client-meta{font-size:13px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:500;}
+.badge-unpaid{background:var(--amber-light);color:var(--amber);}
+.badge-paid{background:var(--accent2-light);color:var(--accent2);}
+.badge-gray{background:var(--surface2);color:var(--text2);}
+.badge-archived{background:var(--surface2);color:var(--text3);}
+.horse-list{display:flex;flex-wrap:wrap;gap:6px;}
+.horse-tag{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:var(--accent-light);color:var(--accent);border-radius:20px;font-size:13px;font-weight:500;}
+.horse-tag-rm{background:none;border:none;cursor:pointer;color:var(--accent);font-size:14px;padding:0;line-height:1;}
+.service-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border);}
+.service-row:last-child{border-bottom:none;}
+.service-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--border2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
+.service-check.checked{background:var(--accent);border-color:var(--accent);}
+.service-check.checked::after{content:"✓";color:#fff;font-size:12px;font-weight:700;}
+.service-name-col{flex:1;font-size:14px;}
+.inv-preview{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.inv-top{background:var(--text);color:#fff;padding:22px;}
+.inv-biz{font-size:20px;font-weight:700;letter-spacing:-.4px;}
+.inv-tagline{font-size:12px;opacity:.5;margin-top:3px;}
+.inv-meta-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);}
+.inv-meta-cell{background:#fafbfd;padding:12px 14px;}
+.inv-meta-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;}
+.inv-meta-val{font-size:13px;font-weight:600;margin-top:2px;}
+.inv-body{padding:16px;}
+.inv-table{width:100%;border-collapse:collapse;font-size:13px;}
+.inv-table th{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:6px 0;border-bottom:1.5px solid var(--border);text-align:left;}
+.inv-table th:last-child{text-align:right;}
+.inv-table td{padding:9px 0;border-bottom:1px solid var(--border);}
+.inv-table td:last-child{text-align:right;font-weight:600;}
+.inv-total{display:flex;justify-content:space-between;align-items:center;padding:14px 0 0;}
+.inv-total-label{font-size:13px;color:var(--text2);}
+.inv-total-amt{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.6px;}
+.inv-payment{padding:12px 16px;background:var(--surface2);border-top:1px solid var(--border);}
+.pay-badge{display:inline-block;padding:4px 11px;background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:12px;margin:2px 3px 2px 0;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:22px;width:calc(100% - 32px);max-width:620px;max-height:88vh;overflow-y:auto;padding:20px 20px 24px;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+.modal-handle{display:none;}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:16px;letter-spacing:-.3px;}
+.modal-actions{display:flex;gap:8px;margin-top:16px;}
+.modal-actions .btn{flex:1;justify-content:center;}
+.inv-item{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:background .12s;}
+.inv-item:active{background:var(--surface2);}
+.inv-item-info{flex:1;min-width:0;}
+.inv-item-name{font-size:15px;font-weight:600;letter-spacing:-.15px;}
+.inv-item-meta{font-size:13px;color:var(--text2);margin-top:2px;}
+.inv-item-amt{font-size:16px;font-weight:700;color:var(--text);letter-spacing:-.2px;}
+.setting-row{display:flex;align-items:center;padding:14px 0;border-bottom:1px solid var(--border);gap:10px;}
+.setting-row:last-child{border-bottom:none;}
+.setting-label{flex:1;font-size:15px;}
+.toggle{width:50px;height:29px;background:var(--border2);border-radius:15px;cursor:pointer;position:relative;flex-shrink:0;transition:background .2s;}
+.toggle.on{background:var(--accent);}
+.toggle-knob{position:absolute;width:23px;height:23px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2);}
+.toggle.on .toggle-knob{transform:translateX(21px);}
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.metric-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:16px;}
+.metric-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px;}
+.metric-value{font-size:26px;font-weight:700;line-height:1;letter-spacing:-.6px;}
+.metric-value.accent{color:var(--accent);}
+.metric-value.green{color:var(--accent2);}
+.metric-value.amber{color:var(--amber);}
+.metric-sub{font-size:12px;color:var(--text3);margin-top:4px;}
+.metric-card-wide{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:16px;margin-bottom:12px;}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.bar-row:last-child{margin-bottom:0;}
+.bar-label{font-size:13px;color:var(--text);width:100px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bar-track{flex:1;height:6px;background:var(--surface2);border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;background:var(--accent);border-radius:4px;}
+.bar-amt{font-size:13px;font-weight:600;width:68px;text-align:right;flex-shrink:0;letter-spacing:-.1px;}
+.unpaid-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.unpaid-row:last-child{border-bottom:none;}
+.dash-section-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin:20px 0 10px;}
+.greeting{font-size:22px;font-weight:700;margin-bottom:3px;letter-spacing:-.5px;}
+.greeting-sub{font-size:14px;color:var(--text2);margin-bottom:20px;}
+.filter-bar{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;padding-bottom:2px;}
+.filter-bar::-webkit-scrollbar{display:none;}
+.filter-chip{padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);white-space:nowrap;cursor:pointer;flex-shrink:0;transition:all .15s;}
+.filter-chip.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.backup-card{background:var(--accent-light);border-radius:var(--radius);border:1px solid #c5d3f8;padding:18px;margin-bottom:12px;}
+.backup-title{font-size:14px;font-weight:600;margin-bottom:4px;color:var(--accent-dark);}
+.backup-sub{font-size:13px;color:#4a5a8a;margin-bottom:14px;line-height:1.55;}
+.last-backup{font-size:12px;color:#6878b0;margin-top:10px;}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.section-title{font-size:20px;font-weight:700;letter-spacing:-.4px;}
+.empty{text-align:center;padding:52px 20px;color:var(--text2);}
+.empty-icon{font-size:44px;margin-bottom:14px;}
+.empty-title{font-size:16px;font-weight:600;margin-bottom:6px;color:var(--text);}
+.empty-sub{font-size:14px;line-height:1.5;}
+.divider{height:1px;background:var(--border);margin:16px 0;}
+.search-wrap{position:relative;margin-bottom:14px;}
+.search-input{width:100%;padding:11px 14px 11px 40px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:15px;background:var(--surface);color:var(--text);-webkit-appearance:none;}
+.search-input:focus{outline:none;border-color:var(--accent);}
+.search-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;pointer-events:none;}
+/* Draft items */
+.draft-item{background:var(--surface);border-radius:var(--radius);border:2px dashed var(--border2);padding:15px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all .15s;}
+.draft-item:active{background:var(--surface2);}
+.draft-badge-pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:var(--amber-light);color:var(--amber);border:1px solid var(--amber);}
+.gen-client-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.gen-client-row:last-child{border-bottom:none;}
+@media print{body>*:not(#print-overlay){display:none!important;}#print-overlay{position:static!important;background:#fff!important;}#print-overlay>div:first-child{display:none!important;}.no-print{display:none!important;}}
+/* Swipe to mark paid */
+.swipe-wrap{position:relative;overflow:hidden;border-radius:var(--radius);margin-bottom:8px;}
+.swipe-action{position:absolute;right:0;top:0;bottom:0;width:90px;background:var(--accent2);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;flex-direction:column;gap:3px;border-radius:0 var(--radius) var(--radius) 0;}
+.swipe-action.unpay{background:var(--text2);}
+.swipe-inner{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;transition:transform .2s ease;touch-action:pan-y;will-change:transform;position:relative;z-index:1;}
+.swipe-inner:active{background:var(--surface2);}
+/* Aging colors */
+.age-fresh{color:var(--accent2);}
+.age-mid{color:var(--amber);}
+.age-old{color:var(--danger);}
+/* Quick add */
+.quick-add-bar{display:flex;gap:8px;margin-bottom:16px;overflow-x:auto;padding-bottom:2px;}
+.quick-add-bar::-webkit-scrollbar{display:none;}
+.quick-client-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-weight:500;white-space:nowrap;cursor:pointer;flex-shrink:0;transition:all .15s;}
+.quick-client-btn:active{background:var(--accent-light);border-color:var(--accent);}
+.quick-client-avatar{width:24px;height:24px;border-radius:6px;background:var(--accent-light);color:var(--accent);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-brand">Invoices</div>
+    <div class="nav-tab active" onclick="showPage('dashboard')">Dashboard</div>
+    <div class="nav-tab" onclick="showPage('clients')">Clients</div>
+    <div class="nav-tab" onclick="showPage('invoices')">Invoices</div>
+    <div class="nav-tab" onclick="showPage('drafts')">Drafts <span id="draft-badge" style="display:none;background:var(--amber);color:#fff;border-radius:20px;padding:1px 7px;font-size:11px;margin-left:3px;"></span></div>
+    <div class="nav-tab" onclick="showPage('history')">History</div>
+    <div class="nav-tab" onclick="showPage('settings')">Settings</div>
+  </div>
+</nav>
+
+<div class="page active" id="page-dashboard"><div id="dash-content"></div></div>
+
+<!-- DRAFTS PAGE -->
+<div class="page" id="page-drafts">
+  <div class="section-header">
+    <div class="section-title">Drafts</div>
+    <button class="btn btn-primary btn-sm" onclick="openGenerateModal()">⚡ Generate</button>
+  </div>
+  <div id="draft-list"></div>
+</div>
+
+<div class="page" id="page-clients">
+  <div class="section-header"><div class="section-title">Clients</div><button class="btn btn-primary btn-sm" onclick="openAddClient()">+ Add Client</button></div>
+  <div class="search-wrap"><span class="search-icon">🔍</span><input class="search-input" id="client-search" placeholder="Search clients..." oninput="renderClients()"></div>
+  <div id="client-list"></div><div id="archived-section"></div>
+</div>
+
+<div class="page" id="page-invoices">
+  <div class="section-header"><div class="section-title">Invoices</div><button class="btn btn-primary btn-sm" onclick="openCreateInvoice()">+ New Invoice</button></div>
+  <div class="search-wrap"><span class="search-icon">🔍</span><input class="search-input" id="invoice-search" placeholder="Search by client, invoice #, month, horse..." oninput="renderInvoiceList()"></div>
+  <div class="filter-bar" id="inv-filters">
+    <div class="filter-chip active" onclick="setInvFilter('all',this)">All</div>
+    <div class="filter-chip" onclick="setInvFilter('unpaid',this)">Unpaid</div>
+    <div class="filter-chip" onclick="setInvFilter('paid',this)">Paid</div>
+  </div>
+  <div id="invoice-list"></div>
+</div>
+
+<div class="page" id="page-history">
+  <div class="section-title" style="margin-bottom:14px;">Full History</div>
+  <div class="search-wrap"><span class="search-icon">🔍</span><input class="search-input" id="history-search" placeholder="Search by client, month, horse..." oninput="renderHistory()"></div>
+  <div class="filter-bar" id="history-year-filters"></div>
+  <div id="history-list"></div>
+</div>
+
+<div class="page" id="page-settings">
+  <div class="section-title" style="margin-bottom:14px;">Settings</div>
+  <div class="backup-card">
+    <div class="backup-title">🛡️ Data backup &amp; restore</div>
+    <div class="backup-sub">Export saves everything — clients, horses, invoices — to a file on your phone. Store it in iCloud Drive or email it to yourself. Import it anytime to restore after an update or on a new device.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-primary btn-sm" onclick="exportData()">⬇ Export backup</button>
+      <button class="btn btn-secondary btn-sm" onclick="document.getElementById('import-file').click()">⬆ Import backup</button>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+    </div>
+    <div class="last-backup" id="last-backup-label"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Appearance</div>
+    <div class="setting-row">
+      <div class="setting-label">Dark mode<div style="font-size:12px;color:var(--text3);margin-top:1px;">Follows your phone's setting by default</div></div>
+      <div class="toggle" id="dark-toggle" onclick="toggleDarkMode()"><div class="toggle-knob"></div></div>
+    </div>
+    <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:10px;">
+      <div style="font-size:15px;">Accent color</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;" id="accent-swatches"></div>
+    </div>
+    <div class="setting-row" style="border-bottom:none;">
+      <div class="setting-label">Invoice logo<div style="font-size:12px;color:var(--text3);margin-top:1px;">Shown on printed invoices</div></div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div id="logo-preview" style="display:none;width:40px;height:40px;border-radius:8px;overflow:hidden;border:1px solid var(--border);"><img id="logo-img" style="width:100%;height:100%;object-fit:contain;"></div>
+        <label style="cursor:pointer;">
+          <div class="btn btn-secondary btn-sm" id="logo-btn">Upload</div>
+          <input type="file" accept="image/*" style="display:none;" onchange="uploadLogo(event)">
+        </label>
+        <button id="logo-remove" class="btn btn-danger btn-sm" style="display:none;" onclick="removeLogo()">Remove</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Business info</div>
+    <div class="form-group"><label class="form-label">Business name</label><input class="form-input" id="set-biz" placeholder="Your business name" autocomplete="off"></div>
+    <div class="form-group"><label class="form-label">Your name</label><input class="form-input" id="set-owner" placeholder="Your name" autocomplete="off"></div>
+    <div class="form-group"><label class="form-label">Address</label><input class="form-input" id="set-address" placeholder="e.g. 1234 Ranch Rd, Lone Tree, CO 80124" autocomplete="off"></div>
+    <div class="form-group" style="margin-bottom:0;"><label class="form-label">Phone / email (shown on invoice)</label><input class="form-input" id="set-contact" placeholder="e.g. 720-555-0100" autocomplete="off"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Default service rates</div>
+    <div class="form-group"><label class="form-label">Monthly training (flat fee)</label><input class="form-input" id="set-training" inputmode="decimal" placeholder="e.g. 800"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Board / feed / month</label><input class="form-input" id="set-board" inputmode="decimal" placeholder="e.g. 400"></div>
+      <div class="form-group"><label class="form-label">Farrier</label><input class="form-input" id="set-farrier" inputmode="decimal" placeholder="e.g. 150"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Travel (per mile)</label><input class="form-input" id="set-travel" inputmode="decimal" placeholder="e.g. 0.67"></div>
+      <div class="form-group" style="margin-bottom:0;"><label class="form-label">Vet / medical</label><input class="form-input" id="set-vet" inputmode="decimal" placeholder="e.g. 0"></div>
+    </div>
+  </div>
+  <div class="card"><div class="card-title">Payment methods</div><div id="payment-toggles"></div></div>
+  <div class="card"><div class="card-title">Invoice footer note</div><input class="form-input" id="set-note" placeholder="e.g. Thank you for your business!" autocomplete="off"></div>
+  <div style="margin-bottom:12px;">
+    <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="saveSettings()">Save Settings</button>
+  </div>
+  <div id="settings-saved-msg" style="display:none;text-align:center;font-size:13px;color:var(--accent2);margin-bottom:12px;">✓ Settings saved</div>
+  <div class="card" style="border-color:#f5c6c2;">
+    <div class="card-title" style="color:var(--danger);">Danger zone</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:12px;">Permanently erase all data. Export a backup first.</div>
+    <button class="btn btn-danger btn-sm" onclick="nukeAllData()">Erase all data</button>
+  </div>
+</div>
+
+<!-- CLIENT DETAIL -->
+<div class="modal-overlay" id="modal-client-detail">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div class="modal-title" id="cd-name" style="margin-bottom:0;"></div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn-icon" onclick="editCurrentClient()">✏️</button>
+        <button class="btn-icon" id="cd-archive-btn"></button>
+        <button class="btn-icon" onclick="closeModal('modal-client-detail')">✕</button>
+      </div>
+    </div>
+    <div id="cd-meta" style="font-size:13px;color:var(--text2);margin-bottom:12px;"></div>
+    <div id="cd-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-radius:var(--radius-sm);overflow:hidden;margin-bottom:14px;"></div>
+    <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;">Horses</div>
+    <div class="horse-list" id="cd-horses" style="margin-bottom:10px;min-height:28px;"></div>
+    <div style="display:flex;gap:8px;">
+      <input class="form-input" id="cd-new-horse" placeholder="Add horse name" style="flex:1;" onkeydown="if(event.key==='Enter')addHorseToClient()">
+      <button class="btn btn-secondary btn-sm" onclick="addHorseToClient()">+ Add</button>
+    </div>
+    <div class="divider"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;">Invoices</div>
+      <button class="btn btn-primary btn-sm" onclick="openCreateInvoiceForClient()">+ New Invoice</button>
+    </div>
+    <div id="cd-invoices"></div>
+  </div>
+</div>
+
+<!-- ADD/EDIT CLIENT -->
+<div class="modal-overlay" id="modal-add-client">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="add-client-title">Add Client</div>
+    <div class="form-group"><label class="form-label">Client name *</label><input class="form-input" id="ac-name" placeholder="e.g. Smith Family"></div>
+    <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="ac-phone" type="tel" placeholder="720-555-0100"></div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="ac-email" type="email" placeholder="smith@email.com"></div>
+    <div class="form-group"><label class="form-label">Notes</label><input class="form-input" id="ac-notes" placeholder="Notes about this client"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-add-client')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveClient()">Save Client</button>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE INVOICE -->
+<div class="modal-overlay" id="modal-create-invoice">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div class="modal-title" style="margin-bottom:0;" id="ci-modal-title">New Invoice</div>
+      <button class="btn-icon" onclick="closeModal('modal-create-invoice')">✕</button>
+    </div>
+    <div class="form-group" style="margin-bottom:12px;"><label class="form-label">Client *</label><select class="form-input" id="ci-client" onchange="onInvoiceClientChange()"><option value="">Select client...</option></select></div>
+    <div class="form-group" style="margin-bottom:12px;" id="ci-horses-group">
+      <label class="form-label">Horses on this invoice</label>
+      <div id="ci-horse-list" style="display:flex;flex-wrap:wrap;gap:8px;min-height:32px;padding:4px 0;"></div>
+    </div>
+    <div class="form-row" style="margin-bottom:12px;">
+      <div class="form-group" style="margin-bottom:0;"><label class="form-label">Billing month</label><input class="form-input" id="ci-month" placeholder="e.g. May 2026"></div>
+      <div class="form-group" style="margin-bottom:0;"><label class="form-label">Due date</label><input class="form-input" id="ci-due" placeholder="e.g. May 31, 2026"></div>
+    </div>
+    <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;">Services</div>
+    <div id="ci-services"></div>
+    <div style="margin-top:10px;display:flex;gap:8px;align-items:flex-end;">
+      <div style="flex:1;"><label class="form-label">Custom service</label><input class="form-input" id="ci-custom-name" placeholder="Service name"></div>
+      <div style="width:88px;"><label class="form-label">Amount</label><input class="form-input" id="ci-custom-rate" type="number" placeholder="$"></div>
+      <button class="btn btn-secondary btn-sm" style="margin-bottom:1px;" onclick="addCustomInvoiceService()">Add</button>
+    </div>
+    <div class="divider"></div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label class="form-label">Notes (optional)</label>
+      <input class="form-input" id="ci-notes" placeholder="e.g. Extra conditioning work on Buddy" autocomplete="off">
+    </div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label class="form-label">Photo attachments (receipts, vet bills etc.)</label>
+      <div id="ci-photos" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;"></div>
+      <label style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--surface2);border:1.5px dashed var(--border2);border-radius:var(--radius-sm);font-size:13px;color:var(--text2);cursor:pointer;">
+        📷 Add photo
+        <input type="file" accept="image/*" multiple style="display:none;" onchange="handlePhotoUpload(event)">
+      </label>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:4px;">
+      <div style="font-size:14px;color:var(--text2);">Total</div>
+      <div style="font-size:20px;font-weight:700;color:var(--accent);" id="ci-total">$0.00</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-create-invoice')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveInvoice()">Create Invoice</button>
+    </div>
+  </div>
+</div>
+
+<!-- INVOICE DETAIL -->
+<div class="modal-overlay" id="modal-invoice-detail">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div class="modal-title" style="margin-bottom:0;">Invoice</div>
+      <div style="display:flex;gap:6px;">
+        <button class="btn-icon" onclick="printInvoice()">🖨️</button>
+        <button class="btn-icon" onclick="closeModal('modal-invoice-detail')">✕</button>
+      </div>
+    </div>
+    <div id="invoice-detail-content"></div>
+    <div class="modal-actions no-print" id="invoice-detail-actions"></div>
+    <div id="invoice-payment-method" class="no-print" style="margin-top:10px;display:none;">
+      <label class="form-label">Payment method received</label>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;" id="payment-method-chips"></div>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px;justify-content:center;" class="no-print">
+      <button class="btn btn-secondary btn-sm" onclick="openEditInvoice()">✏️ Edit</button>
+      <button class="btn btn-secondary btn-sm" onclick="duplicateInvoice()">⧉ Duplicate</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteInvoice()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- GENERATE INVOICES MODAL -->
+<div class="modal-overlay" id="modal-generate">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div class="modal-title" style="margin-bottom:0;">Generate Monthly Invoices</div>
+      <button class="btn-icon" onclick="closeModal('modal-generate')">✕</button>
+    </div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.6;">Creates draft invoices for all active clients using their most recent services. Review each draft before posting.</div>
+    <div class="form-row" style="margin-bottom:14px;">
+      <div class="form-group" style="margin-bottom:0;"><label class="form-label">Billing month</label><input class="form-input" id="gen-month" placeholder="e.g. May 2026"></div>
+      <div class="form-group" style="margin-bottom:0;"><label class="form-label">Due date</label><input class="form-input" id="gen-due" placeholder="e.g. May 31, 2026"></div>
+    </div>
+    <div style="font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Include clients</div>
+    <div id="gen-client-list" style="max-height:260px;overflow-y:auto;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-generate')">Cancel</button>
+      <button class="btn btn-primary" onclick="generateDrafts()">⚡ Create Drafts</button>
+    </div>
+  </div>
+</div>
+
+<!-- DRAFT REVIEW MODAL -->
+<div class="modal-overlay" id="modal-draft-review">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div class="modal-title" style="margin-bottom:0;">Review Draft</div>
+      <button class="btn-icon" onclick="closeModal('modal-draft-review')">✕</button>
+    </div>
+    <div id="draft-review-content"></div>
+    <div class="modal-actions" style="margin-top:14px;">
+      <button class="btn btn-secondary btn-sm" onclick="openEditDraft()">✏️ Edit</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteDraft()">Delete</button>
+      <button class="btn btn-primary" onclick="postDraft()" style="flex:2;">✓ Post Invoice</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- CONFIRM -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="confirm-title"></div>
+    <div id="confirm-body" style="font-size:14px;color:var(--text2);margin-bottom:4px;line-height:1.5;"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('modal-confirm')">Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let state={clients:[],invoices:[],drafts:[],settings:{bizName:'COMPANY NAME',ownerName:'',contact:'',address:'',training:800,board:400,farrier:150,travel:.67,vet:0,payments:{Venmo:true,Zelle:true,Cash:true,Check:true},footerNote:'Thank you for your business!',lastBackup:null},invoiceCounter:0};
+let currentClientId=null,currentInvoiceId=null,editingClientId=null,editingInvoiceId=null,invoiceServices=[],invFilter='all',historyYear='all',pendingPhotos=[];
+
+function load(){try{const s=localStorage.getItem('horseInvoice_v2');if(s)state={...state,...JSON.parse(s)};}catch(e){}}
+function save(){localStorage.setItem('horseInvoice_v2',JSON.stringify(state));sessionStorage.setItem('horseInvoice_backup',JSON.stringify({data:state,ts:Date.now()}));}
+
+// ---- APPEARANCE ----
+const ACCENT_PRESETS=[
+  {name:'Blue',hex:'#3b5bdb',light:'#eef2ff',dark:'#2f4ac4'},
+  {name:'Forest',hex:'#2d6a2d',light:'#eaf3ea',dark:'#1e4a1e'},
+  {name:'Rust',hex:'#c0392b',light:'#fdf0ee',dark:'#922b21'},
+  {name:'Teal',hex:'#0f766e',light:'#e8faf8',dark:'#0a5954'},
+  {name:'Purple',hex:'#7c3aed',light:'#f5f0ff',dark:'#5b21b6'},
+  {name:'Tan',hex:'#92400e',light:'#fef3e2',dark:'#6b2d0a'},
+  {name:'Slate',hex:'#334155',light:'#f1f5f9',dark:'#1e293b'},
+  {name:'Rose',hex:'#be185d',light:'#fdf2f8',dark:'#9d174d'},
+];
+const AVATAR_COLORS=['#3b5bdb','#0f9b6e','#e67700','#c0392b','#7c3aed','#0f766e','#be185d','#92400e','#1d4ed8','#065f46'];
+function getAvatarColor(name){let hash=0;for(let i=0;i<(name||'').length;i++)hash=(name||'').charCodeAt(i)+((hash<<5)-hash);return AVATAR_COLORS[Math.abs(hash)%AVATAR_COLORS.length];}
+function applyAccent(hex,light,dark){const r=document.documentElement;r.style.setProperty('--accent',hex);r.style.setProperty('--accent-light',light);r.style.setProperty('--accent-dark',dark);}
+function applyDarkMode(on){document.body.classList.toggle('dark-mode',on);const t=document.getElementById('dark-toggle');if(t)t.classList.toggle('on',on);}
+function toggleDarkMode(){const on=!document.body.classList.contains('dark-mode');state.settings.darkMode=on;save();applyDarkMode(on);}
+function renderAccentSwatches(){
+  const el=document.getElementById('accent-swatches');if(!el)return;
+  const cur=state.settings.accentHex||'#3b5bdb';
+  el.innerHTML=ACCENT_PRESETS.map(p=>`<div onclick="pickAccent('${p.hex}','${p.light}','${p.dark}')" style="width:32px;height:32px;border-radius:50%;background:${p.hex};cursor:pointer;border:3px solid ${p.hex===cur?'#fff':'transparent'};box-shadow:${p.hex===cur?'0 0 0 3px '+p.hex:'none'};transition:all .15s;" title="${p.name}"></div>`).join('');
+}
+function pickAccent(hex,light,dark){state.settings.accentHex=hex;state.settings.accentLight=light;state.settings.accentDark=dark;save();applyAccent(hex,light,dark);renderAccentSwatches();}
+function uploadLogo(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>{state.settings.logo=ev.target.result;save();showLogoPreview(ev.target.result);};reader.readAsDataURL(file);e.target.value='';}
+function showLogoPreview(data){const prev=document.getElementById('logo-preview');const img=document.getElementById('logo-img');const rm=document.getElementById('logo-remove');if(data){if(prev)prev.style.display='block';if(img)img.src=data;if(rm)rm.style.display='inline-flex';}else{if(prev)prev.style.display='none';if(rm)rm.style.display='none';}}
+function removeLogo(){state.settings.logo=null;save();showLogoPreview(null);}
+function animateNum(el,target){
+  if(!el)return;const duration=700,start=Date.now();
+  const tick=()=>{const p=Math.min((Date.now()-start)/duration,1);const ease=1-Math.pow(1-p,3);const val=target*ease;el.textContent='$'+val.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');if(p<1)requestAnimationFrame(tick);};
+  requestAnimationFrame(tick);
+}
+function initAppearance(){
+  const prefersDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const savedDark=state.settings.darkMode;
+  applyDarkMode(savedDark!==undefined?savedDark:prefersDark);
+  window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',e=>{if(state.settings.darkMode===undefined)applyDarkMode(e.matches);});
+  if(state.settings.accentHex)applyAccent(state.settings.accentHex,state.settings.accentLight||'#eef2ff',state.settings.accentDark||'#2f4ac4');
+  if(state.settings.logo)showLogoPreview(state.settings.logo);
+}
+
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function fmt(n){return'$'+parseFloat(n||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+function initials(name){return(name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+
+function nextInvNum(){
+  state.invoiceCounter=(state.invoiceCounter||0)+1;
+  return'INV-'+String(state.invoiceCounter).padStart(4,'0');
+}
+
+function handlePhotoUpload(e){
+  const files=Array.from(e.target.files);
+  files.forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      pendingPhotos.push({id:uid(),name:file.name,data:ev.target.result});
+      renderPhotoThumbs('ci-photos',pendingPhotos,true);
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value='';
+}
+
+function renderPhotoThumbs(containerId, photos, editable){
+  const el=document.getElementById(containerId);if(!el)return;
+  el.innerHTML=photos.map((p,i)=>`
+    <div style="position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;">
+      <img src="${p.data}" style="width:100%;height:100%;object-fit:cover;" onclick="viewPhoto('${p.id}')">
+      ${editable?`<button onclick="removePhoto(${i})" style="position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">✕</button>`:''}
+    </div>`).join('');
+}
+
+function removePhoto(i){pendingPhotos.splice(i,1);renderPhotoThumbs('ci-photos',pendingPhotos,true);}
+
+function viewPhoto(id){
+  const inv=state.invoices.find(i=>i.id===currentInvoiceId);
+  const allPhotos=inv?.photos||pendingPhotos;
+  const photo=allPhotos.find(p=>p.id===id);
+  if(!photo)return;
+  const existing=document.getElementById('photo-viewer');if(existing)existing.remove();
+  const viewer=document.createElement('div');
+  viewer.id='photo-viewer';
+  viewer.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;';
+  viewer.innerHTML=`
+    <button onclick="document.getElementById('photo-viewer').remove()" style="position:absolute;top:16px;right:16px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:20px;cursor:pointer;">✕</button>
+    <img src="${photo.data}" style="max-width:95vw;max-height:85vh;object-fit:contain;border-radius:8px;">
+    <div style="color:rgba(255,255,255,.6);font-size:13px;margin-top:10px;">${photo.name}</div>`;
+  document.body.appendChild(viewer);
+}
+
+function exportData(){
+  const payload={version:2,exportedAt:new Date().toISOString(),appName:'Horse Invoice',data:state};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='horse-invoice-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  state.settings.lastBackup=new Date().toISOString();save();updateLastBackupLabel();
+  setTimeout(()=>alert('✅ Backup saved!\n\nTo keep it safe:\n• Save to iCloud Drive\n• Email it to yourself\n• AirDrop to your computer\n\nYou can import this file anytime to restore all your data.'),100);
+}
+
+function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const payload=JSON.parse(ev.target.result);
+      const imported=payload.data||payload;
+      if(!imported.clients&&!imported.invoices){alert('❌ This file doesn\'t look like a valid Horse Invoice backup.');return;}
+      const dateStr=payload.exportedAt?new Date(payload.exportedAt).toLocaleDateString():'unknown date';
+      showConfirm('Import backup?',`Replace all current data with backup from ${dateStr}?\n\n${imported.clients?.length||0} clients · ${imported.invoices?.length||0} invoices\n\nThis cannot be undone. Make sure you exported a current backup first.`,()=>{
+        state={...state,...imported};save();
+        renderDashboard();renderClients();renderInvoiceList();renderHistory();
+        // Repopulate settings fields without triggering renderSettings (which resets them)
+        populateSettingsFields();
+        alert(`✅ Imported!\n${imported.clients?.length||0} clients and ${imported.invoices?.length||0} invoices restored.`);
+      });
+    }catch(err){alert('❌ Could not read that file. Make sure it\'s a Horse Invoice backup (.json).');}
+  };
+  reader.readAsText(file);e.target.value='';
+}
+
+function updateLastBackupLabel(){
+  const el=document.getElementById('last-backup-label');if(!el)return;
+  el.textContent=state.settings.lastBackup?'Last backup: '+new Date(state.settings.lastBackup).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}):'⚠️ No backup yet — tap Export to create one';
+}
+
+function nukeAllData(){
+  showConfirm('Erase ALL data?','This permanently deletes every client, horse, and invoice. It cannot be undone.\n\nExport a backup first!',()=>{
+    state={clients:[],invoices:[],settings:{...state.settings}};save();showPage('dashboard');
+    alert('All data erased.');
+  });
+}
+
+function showConfirm(title,body,onOk){
+  document.getElementById('confirm-title').textContent=title;
+  document.getElementById('confirm-body').textContent=body;
+  const btn=document.getElementById('confirm-ok-btn');
+  btn.onclick=()=>{closeModal('modal-confirm');onOk();};
+  openModal('modal-confirm');
+}
+
+let settingsRendered=false;
+
+function coloredAvatar(name,size,radius){
+  const color=getAvatarColor(name||'?');
+  const s=size||42;const r=radius||'13px';
+  return`<div style="width:${s}px;height:${s}px;border-radius:${r};background:${color}20;color:${color};font-size:${Math.floor(s*0.33)}px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${initials(name)}</div>`;
+}
+
+function showPage(id){
+  const pages=['dashboard','clients','invoices','drafts','history','settings'];
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active','visible'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  const pg=document.getElementById('page-'+id);
+  if(!pg)return;
+  pg.classList.add('active');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>pg.classList.add('visible')));
+  const tabs=document.querySelectorAll('.nav-tab');
+  const idx=pages.indexOf(id);
+  if(tabs[idx])tabs[idx].classList.add('active');
+  if(id==='dashboard')renderDashboard();
+  if(id==='clients')renderClients();
+  if(id==='invoices')renderInvoiceList();
+  if(id==='drafts')renderDrafts();
+  if(id==='history')renderHistory();
+  if(id==='settings'&&!settingsRendered){renderSettings();settingsRendered=true;}
+  else if(id==='settings'){updateLastBackupLabel();}
+}
+
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+
+function renderClients(){
+  const q=(document.getElementById('client-search')?.value||'').toLowerCase();
+  const active=state.clients.filter(c=>!c.archived&&(!q||c.name.toLowerCase().includes(q)));
+  const archived=state.clients.filter(c=>c.archived&&(!q||c.name.toLowerCase().includes(q)));
+  const el=document.getElementById('client-list');
+  if(!active.length&&!archived.length){el.innerHTML=`<div class="empty"><div class="empty-icon">🐴</div><div class="empty-title">No clients yet</div><div class="empty-sub">Tap "+ Add Client" to get started</div></div>`;}
+  else if(!active.length){el.innerHTML=`<div style="font-size:13px;color:var(--text3);padding:8px 0;">No active clients</div>`;}
+  else{el.innerHTML=active.map(c=>clientRow(c,false)).join('');}
+  const archEl=document.getElementById('archived-section');
+  archEl.innerHTML=archived.length?`<div style="font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin:16px 0 8px;">Archived (${archived.length})</div>`+archived.map(c=>clientRow(c,true)).join(''):'';
+}
+
+function clientRow(c,isArch){
+  const clientInvs=state.invoices.filter(i=>i.clientId===c.id);
+  const unpaid=clientInvs.filter(i=>!i.paid).length;
+  const invCount=clientInvs.length;
+  const lastInv=[...clientInvs].sort((a,b)=>b.createdAt-a.createdAt)[0];
+  const lastDate=lastInv?new Date(lastInv.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'Never';
+  const outstanding=clientInvs.filter(i=>!i.paid).reduce((s,i)=>s+i.total,0);
+  return`<div class="client-item ${isArch?'archived':''}" onclick="openClientDetail('${c.id}')">
+    ${coloredAvatar(c.name,42,'13px')}
+    <div class="client-info">
+      <div class="client-name">${c.name}${isArch?' <span class="badge badge-archived" style="font-size:10px;">archived</span>':''}</div>
+      <div class="client-meta">${c.horses?.length?'🐴 '+c.horses.join(', '):'No horses'}</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:2px;">Last billed ${lastDate} · ${invCount} invoice${invCount!==1?'s':''}</div>
+    </div>
+    <div style="text-align:right;flex-shrink:0;">
+      ${unpaid?`<div style="font-size:14px;font-weight:700;color:var(--amber);">${fmt(outstanding)}</div><div style="font-size:11px;color:var(--text3);">${unpaid} unpaid</div>`:'<div style="font-size:12px;color:var(--accent2);font-weight:500;">✓ Paid up</div>'}
+    </div>
+    <span style="color:var(--text3);font-size:18px;margin-left:4px;">›</span>
+  </div>`;
+}
+
+function openAddClient(){
+  editingClientId=null;
+  document.getElementById('add-client-title').textContent='Add Client';
+  ['ac-name','ac-phone','ac-email','ac-notes'].forEach(id=>document.getElementById(id).value='');
+  openModal('modal-add-client');setTimeout(()=>document.getElementById('ac-name').focus(),100);
+}
+
+function editCurrentClient(){
+  const c=state.clients.find(c=>c.id===currentClientId);if(!c)return;
+  editingClientId=c.id;
+  document.getElementById('add-client-title').textContent='Edit Client';
+  document.getElementById('ac-name').value=c.name||'';document.getElementById('ac-phone').value=c.phone||'';
+  document.getElementById('ac-email').value=c.email||'';document.getElementById('ac-notes').value=c.notes||'';
+  closeModal('modal-client-detail');openModal('modal-add-client');
+}
+
+function saveClient(){
+  const name=document.getElementById('ac-name').value.trim();
+  if(!name){alert('Please enter a client name');return;}
+  if(editingClientId){
+    const c=state.clients.find(c=>c.id===editingClientId);
+    Object.assign(c,{name,phone:document.getElementById('ac-phone').value,email:document.getElementById('ac-email').value,notes:document.getElementById('ac-notes').value});
+    currentClientId=editingClientId;
+  }else{
+    const c={id:uid(),name,phone:document.getElementById('ac-phone').value,email:document.getElementById('ac-email').value,notes:document.getElementById('ac-notes').value,horses:[],archived:false,createdAt:Date.now()};
+    state.clients.push(c);currentClientId=c.id;
+  }
+  save();renderClients();closeModal('modal-add-client');openClientDetail(currentClientId);
+}
+
+function openClientDetail(id){
+  currentClientId=id;
+  const c=state.clients.find(c=>c.id===id);if(!c)return;
+  document.getElementById('cd-name').textContent=c.name;
+  document.getElementById('cd-meta').textContent=[c.phone,c.email,c.notes].filter(Boolean).join(' · ')||'No contact info';
+  // Stats
+  const clientInvs=state.invoices.filter(i=>i.clientId===id);
+  const lifetimeBilled=clientInvs.reduce((s,i)=>s+i.total,0);
+  const lifetimeCollected=clientInvs.filter(i=>i.paid).reduce((s,i)=>s+i.total,0);
+  const outstanding=clientInvs.filter(i=>!i.paid).reduce((s,i)=>s+i.total,0);
+  const statsEl=document.getElementById('cd-stats');
+  statsEl.innerHTML=[
+    ['Lifetime billed',fmt(lifetimeBilled),''],
+    ['Collected',fmt(lifetimeCollected),'color:var(--accent2);'],
+    ['Outstanding',fmt(outstanding),outstanding>0?'color:var(--amber);':'color:var(--accent2);']
+  ].map(([label,val,style])=>`<div style="background:var(--surface2);padding:10px 12px;"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;">${label}</div><div style="font-size:15px;font-weight:700;margin-top:2px;${style}">${val}</div></div>`).join('');
+  const btn=document.getElementById('cd-archive-btn');
+  btn.textContent=c.archived?'📂':'🗂️';btn.title=c.archived?'Unarchive':'Archive';
+  btn.onclick=()=>toggleArchiveClient(id);
+  renderClientHorses(c);renderClientInvoiceList(c);openModal('modal-client-detail');
+}
+
+function toggleArchiveClient(id){
+  const c=state.clients.find(c=>c.id===id);if(!c)return;
+  const action=c.archived?'Unarchive':'Archive';
+  showConfirm(`${action} ${c.name}?`,c.archived?'They will reappear in your active client list.':'They will be hidden from the main list. All their invoices and history are kept forever.',()=>{
+    c.archived=!c.archived;save();renderClients();openClientDetail(id);
+  });
+}
+
+function renderClientHorses(c){
+  const el=document.getElementById('cd-horses');
+  el.innerHTML=c.horses?.length?c.horses.map((h,i)=>`<span class="horse-tag">🐴 ${h} <button class="horse-tag-rm" onclick="removeHorse(${i})">×</button></span>`).join(''):'<span style="font-size:13px;color:var(--text3);">No horses yet</span>';
+}
+
+function addHorseToClient(){
+  const inp=document.getElementById('cd-new-horse');const name=inp.value.trim();if(!name)return;
+  const c=state.clients.find(c=>c.id===currentClientId);if(!c.horses)c.horses=[];
+  c.horses.push(name);inp.value='';save();renderClientHorses(c);renderClients();
+}
+
+function removeHorse(idx){
+  const c=state.clients.find(c=>c.id===currentClientId);c.horses.splice(idx,1);save();renderClientHorses(c);
+}
+
+function renderClientInvoiceList(c){
+  const el=document.getElementById('cd-invoices');
+  const invs=state.invoices.filter(i=>i.clientId===c.id).sort((a,b)=>b.createdAt-a.createdAt);
+  if(!invs.length){el.innerHTML='<div style="font-size:13px;color:var(--text3);padding:8px 0;">No invoices yet</div>';return;}
+  el.innerHTML=invs.map(inv=>`<div class="inv-item" onclick="openInvoiceDetail('${inv.id}')">
+    <div class="inv-item-info"><div class="inv-item-name">${inv.month||'Invoice'} ${(inv.horses?.length?inv.horses:(inv.horse?[inv.horse]:[])).filter(Boolean).join(', ') ? '· '+(inv.horses?.length?inv.horses:(inv.horse?[inv.horse]:[])).filter(Boolean).join(', ') : ''}</div><div class="inv-item-meta">Due ${inv.due||'—'}</div></div>
+    <div style="text-align:right;"><div class="inv-item-amt">${fmt(inv.total)}</div><span class="badge ${inv.paid?'badge-paid':'badge-unpaid'}">${inv.paid?'Paid':'Unpaid'}</span></div>
+  </div>`).join('');
+}
+
+function setInvFilter(f,el){
+  invFilter=f;document.querySelectorAll('#inv-filters .filter-chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderInvoiceList();
+}
+
+// Swipe to mark paid
+function swipeStart(e,id){
+  window._swipe[id]={startX:e.touches[0].clientX,moved:false};
+}
+function swipeMove(e,id){
+  const sw=window._swipe[id];if(!sw)return;
+  const dx=sw.startX-e.touches[0].clientX;
+  if(dx>10){
+    sw.moved=true;
+    const el=document.getElementById('swipe-inner-'+id);
+    if(el)el.style.transform=`translateX(${Math.min(-dx,90)*-1<-90?'-90px':'-'+Math.min(dx,90)+'px'})`; 
+    e.preventDefault();
+  }
+}
+function swipeEnd(e,id){
+  const sw=window._swipe[id];if(!sw)return;
+  const el=document.getElementById('swipe-inner-'+id);
+  const dx=sw.startX-e.changedTouches[0].clientX;
+  if(dx>50){
+    // Reveal action — keep open
+    if(el)el.style.transform='translateX(-90px)';
+  } else {
+    // Snap back
+    if(el)el.style.transform='translateX(0)';
+  }
+  window._swipe[id]={...sw,moved:dx>10};
+}
+function swipeMarkPaid(id){
+  currentInvoiceId=id;
+  togglePaidStatus();
+  const el=document.getElementById('swipe-inner-'+id);
+  if(el)el.style.transform='translateX(0)';
+}
+
+function renderInvoiceList(){
+  const el=document.getElementById('invoice-list');
+  const q=(document.getElementById('invoice-search')?.value||'').toLowerCase().trim();
+  let invs=[...state.invoices].sort((a,b)=>b.createdAt-a.createdAt);
+  if(invFilter==='unpaid')invs=invs.filter(i=>!i.paid);
+  if(invFilter==='paid')invs=invs.filter(i=>i.paid);
+  if(q){
+    invs=invs.filter(i=>{
+      const c=state.clients.find(c=>c.id===i.clientId);
+      const horses=(i.horses?.length?i.horses:(i.horse?[i.horse]:[])).join(' ');
+      return(i.invNum||'').toLowerCase().includes(q)
+        ||(c?.name||'').toLowerCase().includes(q)
+        ||(i.month||'').toLowerCase().includes(q)
+        ||horses.toLowerCase().includes(q)
+        ||(i.notes||'').toLowerCase().includes(q);
+    });
+  }
+  if(!invs.length){el.innerHTML=`<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">${invFilter==='all'&&!q?'No invoices yet':'No results'}</div><div class="empty-sub">${invFilter==='all'&&!q?'Tap "+ New Invoice" to create one':''}</div></div>`;return;}
+  el.innerHTML=invs.map(inv=>{
+    const c=state.clients.find(c=>c.id===inv.clientId);
+    const ov=isOverdue(inv);
+    const ageDays=Math.floor((Date.now()-inv.createdAt)/86400000);
+    let ageClass='',ageLabel='';
+    if(!inv.paid){
+      if(ov){ageClass='age-old';ageLabel='Overdue';}
+      else if(ageDays>14){ageClass='age-mid';ageLabel=ageDays+'d';}
+      else{ageClass='age-fresh';ageLabel=ageDays===0?'Today':ageDays+'d';}
+    }
+    const actionLabel=inv.paid?'Mark unpaid':'Mark paid';
+    const actionClass=inv.paid?'unpay':'';
+    return`<div class="swipe-wrap" id="swipe-${inv.id}">
+      <div class="swipe-action ${actionClass}" onclick="swipeMarkPaid('${inv.id}')">
+        <span style="font-size:18px;">${inv.paid?'↩':'✓'}</span>
+        <span>${actionLabel}</span>
+      </div>
+      <div class="swipe-inner" id="swipe-inner-${inv.id}" onclick="openInvoiceDetail('${inv.id}')" ontouchstart="swipeStart(event,'${inv.id}')" ontouchmove="swipeMove(event,'${inv.id}')" ontouchend="swipeEnd(event,'${inv.id}')">
+        ${coloredAvatar(c?c.name:'?',38,'10px')}
+        <div class="inv-item-info">
+          <div class="inv-item-name">${c?c.name:'Unknown'}</div>
+          <div class="inv-item-meta">${inv.invNum?inv.invNum+' · ':''}${inv.month||'—'} ${(inv.horses?.length?inv.horses:(inv.horse?[inv.horse]:[])).filter(Boolean).join(', ')?'· '+(inv.horses?.length?inv.horses:(inv.horse?[inv.horse]:[])).filter(Boolean).join(', '):''}  </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div class="inv-item-amt">${fmt(inv.total)}</div>
+          <span class="badge ${inv.paid?'badge-paid':'badge-unpaid'}">${inv.paid?'Paid':`<span class="${ageClass}">${ageLabel||'Unpaid'}</span>`}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  // Init swipe state
+  window._swipe={};
+}
+
+function openCreateInvoice(){editingInvoiceId=null;editingDraftId=null;buildInvoiceModal(null);openModal('modal-create-invoice');}
+function quickAddInvoice(clientId){editingInvoiceId=null;editingDraftId=null;buildInvoiceModal(clientId);openModal('modal-create-invoice');}
+function openCreateInvoiceForClient(){editingInvoiceId=null;editingDraftId=null;closeModal('modal-client-detail');buildInvoiceModal(currentClientId);openModal('modal-create-invoice');}
+function openEditInvoice(){
+  const inv=state.invoices.find(i=>i.id===currentInvoiceId);if(!inv)return;
+  editingInvoiceId=inv.id;
+  closeModal('modal-invoice-detail');
+  // Rebuild invoiceServices from the saved invoice
+  const s=state.settings;
+  const defaultNames=['Monthly training','Board / feed','Farrier','Travel / hauling','Vet / medical'];
+  // Start with defaults, mark all disabled
+  invoiceServices=[
+    {id:uid(),name:'Monthly training',rate:s.training||0,enabled:false,isTraining:true,horses:1},
+    {id:uid(),name:'Board / feed',rate:s.board||0,enabled:false,isMultiplied:true,qty:1},
+    {id:uid(),name:'Farrier',rate:s.farrier||0,enabled:false,isMultiplied:true,qty:1},
+    {id:uid(),name:'Travel / hauling',rate:s.travel||0,enabled:false,isTravel:true,miles:0},
+    {id:uid(),name:'Vet / medical',rate:s.vet||0,enabled:false,isFlat:true},
+  ];
+  // Re-apply saved services
+  inv.services.forEach(saved=>{
+    const existing=invoiceServices.find(s=>s.name===saved.name);
+    if(existing){
+      existing.enabled=true;existing.rate=saved.rate;
+      if(existing.isTravel)existing.miles=saved.qty||0;
+      if(existing.isTraining)existing.horses=saved.qty||1;
+      if(existing.isMultiplied)existing.qty=saved.qty||1;
+    }else{
+      // custom service
+      invoiceServices.push({id:uid(),name:saved.name,rate:saved.rate,enabled:true,isFlat:true});
+    }
+  });
+  document.getElementById('ci-modal-title').textContent='Edit Invoice';
+  pendingPhotos=inv.photos?[...inv.photos]:[];
+  document.getElementById('ci-notes').value=inv.notes||'';
+  renderPhotoThumbs('ci-photos',pendingPhotos,true);
+  selectedHorses = inv.horses ? [...inv.horses] : (inv.horse ? [inv.horse] : []);
+  const sel=document.getElementById('ci-client');
+  sel.innerHTML='<option value="">Select client...</option>'+state.clients.filter(c=>!c.archived).map(c=>`<option value="${c.id}" ${c.id===inv.clientId?'selected':''}>${c.name}</option>`).join('');
+  onInvoiceClientChange(inv.clientId, selectedHorses);
+  document.getElementById('ci-month').value=inv.month||'';
+  document.getElementById('ci-due').value=inv.due||'';
+  renderInvoiceServices();
+  openModal('modal-create-invoice');
+}
+
+function buildInvoiceModal(preClientId){
+  const s=state.settings;
+  invoiceServices=[
+    {id:uid(),name:'Monthly training',rate:s.training||0,enabled:true,isTraining:true,horses:1},
+    {id:uid(),name:'Board / feed',rate:s.board||0,enabled:false,isMultiplied:true,qty:1},
+    {id:uid(),name:'Farrier',rate:s.farrier||0,enabled:false,isMultiplied:true,qty:1},
+    {id:uid(),name:'Travel / hauling',rate:s.travel||0,enabled:false,isTravel:true,miles:0},
+    {id:uid(),name:'Vet / medical',rate:s.vet||0,enabled:false,isFlat:true},
+  ];
+  document.getElementById('ci-modal-title').textContent='New Invoice';
+  pendingPhotos=[];
+  document.getElementById('ci-notes').value='';
+  renderPhotoThumbs('ci-photos',[],true);
+  selectedHorses=[];
+  const sel=document.getElementById('ci-client');
+  sel.innerHTML='<option value="">Select client...</option>'+state.clients.filter(c=>!c.archived).map(c=>`<option value="${c.id}" ${c.id===preClientId?'selected':''}>${c.name}</option>`).join('');
+  if(preClientId) onInvoiceClientChange(preClientId);
+  else document.getElementById('ci-horse-list').innerHTML='<span style="font-size:13px;color:var(--text3);">Select a client first</span>';
+  const now=new Date();
+  document.getElementById('ci-month').value=now.toLocaleString('default',{month:'long'})+' '+now.getFullYear();
+  const last=new Date(now.getFullYear(),now.getMonth()+1,0);
+  document.getElementById('ci-due').value=last.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  renderInvoiceServices();
+}
+
+let selectedHorses=[];
+
+function onInvoiceClientChange(preId, preSelectedHorses){
+  const id=preId||document.getElementById('ci-client').value;
+  const c=state.clients.find(c=>c.id===id);
+  selectedHorses = preSelectedHorses ? [...preSelectedHorses] : (c?.horses?.length ? [...c.horses] : []);
+  renderHorseCheckboxes(c);
+}
+
+function renderHorseCheckboxes(c){
+  const el=document.getElementById('ci-horse-list');
+  if(!c?.horses?.length){
+    el.innerHTML='<span style="font-size:13px;color:var(--text3);">No horses on this client — add them in the Clients tab</span>';
+    return;
+  }
+  el.innerHTML=c.horses.map(h=>{
+    const checked=selectedHorses.includes(h);
+    return`<div onclick="toggleHorseSelection('${h}')" style="display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:20px;border:1.5px solid ${checked?'var(--accent)':'var(--border)'};background:${checked?'var(--accent-light)':'var(--surface)'};cursor:pointer;font-size:13px;font-weight:500;color:${checked?'var(--accent)':'var(--text2)'};transition:all .15s;">
+      <span style="width:16px;height:16px;border-radius:50%;border:2px solid ${checked?'var(--accent)':'var(--border2)'};background:${checked?'var(--accent)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">${checked?'<span style="color:#fff;font-size:10px;font-weight:700;">✓</span>':''}</span>
+      ${h}
+    </div>`;
+  }).join('');
+}
+
+function toggleHorseSelection(h){
+  if(selectedHorses.includes(h)) selectedHorses=selectedHorses.filter(x=>x!==h);
+  else selectedHorses.push(h);
+  const c=state.clients.find(c=>c.id===document.getElementById('ci-client').value);
+  renderHorseCheckboxes(c);
+}
+
+function renderInvoiceServices(){
+  document.getElementById('ci-services').innerHTML=invoiceServices.map((s,i)=>`
+    <div class="service-row">
+      <div class="service-check ${s.enabled?'checked':''}" onclick="toggleInvService(${i})"></div>
+      <div class="service-name-col">${s.name}</div>
+      ${s.isTraining?`<div style="display:flex;align-items:center;gap:4px;"><input type="number" value="${s.horses||1}" min="1" max="20" style="width:42px;padding:5px 6px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:center;" oninput="updateTrainingHorses(${i},this.value)"><span style="font-size:11px;color:var(--text2);">×</span></div>`:''}
+      ${s.isMultiplied?`<div style="display:flex;align-items:center;gap:4px;"><input type="number" value="${s.qty||1}" min="1" max="20" style="width:42px;padding:5px 6px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:center;" oninput="updateMultipliedQty(${i},this.value)"><span style="font-size:11px;color:var(--text2);">×</span></div>`:''}
+      ${s.isTravel?`<div style="display:flex;align-items:center;gap:4px;"><input type="number" value="${s.miles||0}" min="0" placeholder="0" style="width:42px;padding:5px 6px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:center;" oninput="updateMiles(${i},this.value)"><span style="font-size:11px;color:var(--text2);">mi</span></div>`:''}
+      <input type="number" value="${s.rate}" min="0" step="0.01" style="width:78px;padding:5px 7px;border:1px solid var(--border);border-radius:6px;font-size:13px;text-align:right;" oninput="updateServiceRate(${i},this.value)">
+    </div>`).join('');
+  updateInvoiceTotal();
+}
+
+function toggleInvService(i){invoiceServices[i].enabled=!invoiceServices[i].enabled;renderInvoiceServices();}
+function updateServiceRate(i,v){invoiceServices[i].rate=parseFloat(v)||0;updateInvoiceTotal();}
+function updateMiles(i,v){invoiceServices[i].miles=parseFloat(v)||0;updateInvoiceTotal();}
+function updateTrainingHorses(i,v){invoiceServices[i].horses=Math.max(1,parseInt(v)||1);updateInvoiceTotal();}
+function updateMultipliedQty(i,v){invoiceServices[i].qty=Math.max(1,parseInt(v)||1);updateInvoiceTotal();}
+
+function getLineTotal(s){
+  if(s.isTravel) return s.rate*(s.miles||0);
+  if(s.isTraining) return s.rate*(s.horses||1);
+  if(s.isMultiplied) return s.rate*(s.qty||1);
+  return s.rate;
+}
+
+function addCustomInvoiceService(){
+  const name=document.getElementById('ci-custom-name').value.trim();
+  const rate=parseFloat(document.getElementById('ci-custom-rate').value)||0;
+  if(!name)return;
+  invoiceServices.push({id:uid(),name,rate,enabled:true,isFlat:true});
+  document.getElementById('ci-custom-name').value='';document.getElementById('ci-custom-rate').value='';
+  renderInvoiceServices();
+}
+
+function updateInvoiceTotal(){
+  const total=invoiceServices.filter(s=>s.enabled).reduce((sum,s)=>sum+getLineTotal(s),0);
+  document.getElementById('ci-total').textContent=fmt(total);
+}
+
+function saveInvoice(){
+  const clientId=document.getElementById('ci-client').value;
+  if(!clientId){alert('Please select a client');return;}
+  const checked=invoiceServices.filter(s=>s.enabled);
+  const total=checked.reduce((sum,s)=>sum+getLineTotal(s),0);
+  const services=checked.map(s=>({
+    name:s.name,rate:s.rate,
+    qty:s.isTravel?(s.miles||0):s.isTraining?(s.horses||1):s.isMultiplied?(s.qty||1):1,
+    isTravel:!!s.isTravel,isTraining:!!s.isTraining,isMultiplied:!!s.isMultiplied,
+    lineTotal:getLineTotal(s)
+  }));
+  if(editingDraftId){
+    // Save changes back to draft
+    const d=(state.drafts||[]).find(d=>d.id===editingDraftId);
+    if(d){Object.assign(d,{clientId,horses:selectedHorses,horse:selectedHorses[0]||'',month:document.getElementById('ci-month').value,due:document.getElementById('ci-due').value,services,total,notes:document.getElementById('ci-notes').value,photos:[...pendingPhotos]});}
+    editingDraftId=null;save();closeModal('modal-create-invoice');renderDrafts();
+    // Re-open the draft review
+    if(d)openDraftReview(d.id);
+  } else if(editingInvoiceId){
+    const inv=state.invoices.find(i=>i.id===editingInvoiceId);
+    Object.assign(inv,{clientId,horses:selectedHorses,horse:selectedHorses[0]||'',month:document.getElementById('ci-month').value,due:document.getElementById('ci-due').value,services,total,notes:document.getElementById('ci-notes').value,photos:[...pendingPhotos]});
+    save();closeModal('modal-create-invoice');renderInvoiceList();renderHistory();
+    if(currentClientId){const c=state.clients.find(c=>c.id===currentClientId);if(c)renderClientInvoiceList(c);}
+    openInvoiceDetail(editingInvoiceId);editingInvoiceId=null;
+  }else{
+    const inv={id:uid(),invNum:nextInvNum(),clientId,horses:selectedHorses,horse:selectedHorses[0]||'',month:document.getElementById('ci-month').value,due:document.getElementById('ci-due').value,services,total,notes:document.getElementById('ci-notes').value,photos:[...pendingPhotos],paid:false,createdAt:Date.now()};
+    state.invoices.push(inv);save();closeModal('modal-create-invoice');renderInvoiceList();renderHistory();openInvoiceDetail(inv.id);
+  }
+}
+
+function isOverdue(inv){
+  if(inv.paid||!inv.due)return false;
+  const parts=inv.due.match(/(\w+)\s+(\d+),?\s+(\d{4})/);
+  if(!parts)return false;
+  return new Date(inv.due)<new Date();
+}
+
+function invHTML(inv){
+  const c=state.clients.find(c=>c.id===inv.clientId);const s=state.settings;
+  const ap=Object.entries(s.payments||{}).filter(([,v])=>v).map(([k])=>k);
+  const overdue=isOverdue(inv);
+  const rows=inv.services.map(svc=>{
+    let qtyLabel='—';
+    if(svc.isTravel)qtyLabel=svc.qty+' mi';
+    else if(svc.isTraining&&svc.qty>1)qtyLabel=svc.qty+' horses';
+    else if(svc.isMultiplied&&svc.qty>1)qtyLabel='× '+svc.qty;
+    let rateLabel=fmt(svc.rate);
+    if(svc.isTravel)rateLabel=fmt(svc.rate)+'/mi';
+    else if((svc.isTraining||svc.isMultiplied)&&svc.qty>1)rateLabel=fmt(svc.rate)+' ea';
+    return`<tr><td>${svc.name}</td><td style="text-align:center;color:var(--text2);">${qtyLabel}</td><td style="text-align:right;color:var(--text2);">${rateLabel}</td><td>${fmt(svc.lineTotal)}</td></tr>`;
+  }).join('');
+  const horseList=inv.horses?.length?inv.horses:(inv.horse?[inv.horse]:[]);
+  const statusLabel=inv.paid?`<span style="color:var(--accent2);">✅ Paid${inv.paidDate?' · '+inv.paidDate:''}</span>${inv.paymentMethod?` <span style="font-size:11px;color:var(--text3);">via ${inv.paymentMethod}</span>`:''}`
+    :overdue?`<span style="color:var(--danger);">⚠️ Overdue</span>`:`<span style="color:var(--text2);">Amount due</span>`;
+  return`<div class="inv-preview">
+    <div class="inv-top">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div class="inv-biz">${s.bizName||'Your Business'}</div>
+          ${s.address?`<div class="inv-tagline">${s.address}</div>`:''}
+          ${s.contact?`<div class="inv-tagline">${s.contact}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+          ${s.logo?`<img src="${s.logo}" style="height:52px;max-width:80px;object-fit:contain;border-radius:6px;">`:'' }
+          ${inv.invNum?`<div style="font-size:12px;opacity:.7;font-weight:500;">${inv.invNum}</div>`:''}
+        </div>
+      </div>
+    </div>
+    <div class="inv-meta-grid">
+      <div class="inv-meta-cell"><div class="inv-meta-label">Client</div><div class="inv-meta-val">${c?.name||'—'}</div></div>
+      <div class="inv-meta-cell"><div class="inv-meta-label">Period</div><div class="inv-meta-val">${inv.month||'—'}</div></div>
+      <div class="inv-meta-cell"><div class="inv-meta-label">Due</div><div class="inv-meta-val" style="${overdue&&!inv.paid?'color:var(--danger);':''}">${inv.due||'—'}</div></div>
+    </div>
+    ${horseList.length?`<div style="padding:10px 16px;background:#f5f5f3;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:6px;">${horseList.map(h=>`<span style="display:inline-flex;align-items:center;padding:4px 10px;background:#fff;border:1px solid #e0ddd8;border-radius:20px;font-size:12px;font-weight:500;color:#52586a;">${h}</span>`).join('')}</div>`:''}
+    <div class="inv-body">
+      <table class="inv-table"><thead><tr><th>Service</th><th style="text-align:center;">Qty</th><th style="text-align:right;">Rate</th><th style="text-align:right;">Total</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="inv-total"><div class="inv-total-label">${statusLabel}</div><div class="inv-total-amt">${fmt(inv.total)}</div></div>
+    </div>
+    ${inv.notes?`<div style="padding:10px 16px;background:#fffdf5;border-top:1px solid var(--border);font-size:13px;color:var(--text2);"><span style="font-weight:600;color:var(--text);">Note:</span> ${inv.notes}</div>`:''}
+    ${inv.photos?.length?`<div style="padding:10px 16px;border-top:1px solid var(--border);"><div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Attachments (${inv.photos.length})</div><div style="display:flex;flex-wrap:wrap;gap:8px;">${inv.photos.map(p=>`<div style="width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid var(--border);cursor:pointer;" onclick="viewPhoto('${p.id}')"><img src="${p.data}" style="width:100%;height:100%;object-fit:cover;"></div>`).join('')}</div></div>`:''}
+    ${ap.length?`<div class="inv-payment"><div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">Payment accepted via</div><div>${ap.map(p=>`<span class="pay-badge">${p}</span>`).join('')}</div></div>`:''}
+    ${s.footerNote?`<div style="padding:10px 14px;font-size:12px;color:var(--text2);border-top:1px solid var(--border);">${s.footerNote}</div>`:''}
+  </div>`;
+}
+
+function openInvoiceDetail(id){
+  currentInvoiceId=id;const inv=state.invoices.find(i=>i.id===id);if(!inv)return;
+  document.getElementById('invoice-detail-content').innerHTML=invHTML(inv);
+  const overdue=isOverdue(inv);
+  document.getElementById('invoice-detail-actions').innerHTML=inv.paid
+    ?`<button class="btn btn-secondary" onclick="togglePaidStatus()">Mark as unpaid</button>`
+    :`<button class="btn btn-success" onclick="togglePaidStatus()">✓ Mark as paid</button>${overdue?` <span class="badge badge-unpaid" style="margin-left:4px;">⚠️ Overdue</span>`:''}`;
+  // Payment method selector — show when unpaid
+  const pmDiv=document.getElementById('invoice-payment-method');
+  const pmChips=document.getElementById('payment-method-chips');
+  if(!inv.paid){
+    pmDiv.style.display='block';
+    const methods=['Venmo','Zelle','Cash','Check'];
+    pmChips.innerHTML=methods.map(m=>`<div onclick="selectPaymentMethod('${m}')" style="padding:7px 14px;border-radius:20px;border:1.5px solid ${inv.paymentMethod===m?'var(--accent)':'var(--border)'};background:${inv.paymentMethod===m?'var(--accent-light)':'var(--surface)'};font-size:13px;font-weight:500;color:${inv.paymentMethod===m?'var(--accent)':'var(--text2)'};cursor:pointer;">${m}</div>`).join('');
+  } else {
+    pmDiv.style.display='none';
+  }
+  openModal('modal-invoice-detail');
+}
+
+function selectPaymentMethod(m){
+  const inv=state.invoices.find(i=>i.id===currentInvoiceId);if(!inv)return;
+  inv.paymentMethod=inv.paymentMethod===m?null:m;
+  save();openInvoiceDetail(currentInvoiceId);
+}
+
+function togglePaidStatus(){
+  const inv=state.invoices.find(i=>i.id===currentInvoiceId);if(!inv)return;
+  inv.paid=!inv.paid;inv.paidDate=inv.paid?new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):null;
+  save();openInvoiceDetail(currentInvoiceId);renderInvoiceList();renderHistory();renderDashboard();renderClients();
+  if(currentClientId){const c=state.clients.find(c=>c.id===currentClientId);if(c)renderClientInvoiceList(c);}
+}
+
+function deleteInvoice(){
+  const inv=state.invoices.find(i=>i.id===currentInvoiceId);if(!inv)return;
+  const c=state.clients.find(c=>c.id===inv.clientId);
+  showConfirm('Delete invoice?',`Delete ${inv.month||'this invoice'} for ${c?.name||'this client'}? This cannot be undone.`,()=>{
+    state.invoices=state.invoices.filter(i=>i.id!==currentInvoiceId);save();
+    closeModal('modal-invoice-detail');renderInvoiceList();renderHistory();
+    if(currentClientId){const c2=state.clients.find(c=>c.id===currentClientId);if(c2)renderClientInvoiceList(c2);}
+  });
+}
+
+function duplicateInvoice(){
+  const orig=state.invoices.find(i=>i.id===currentInvoiceId);if(!orig)return;
+  const now=new Date();
+  const newInv={
+    ...JSON.parse(JSON.stringify(orig)),
+    id:uid(),invNum:nextInvNum(),
+    paid:false,paidDate:null,paymentMethod:null,
+    createdAt:Date.now(),
+    month:now.toLocaleString('default',{month:'long'})+' '+now.getFullYear(),
+    due:new Date(now.getFullYear(),now.getMonth()+1,0).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),
+    photos:[],notes:orig.notes||''
+  };
+  state.invoices.push(newInv);save();
+  closeModal('modal-invoice-detail');renderInvoiceList();renderHistory();
+  openInvoiceDetail(newInv.id);
+}
+
+function printInvoice(){
+  const content=document.getElementById('invoice-detail-content').innerHTML;
+  const inv=state.invoices.find(i=>i.id===currentInvoiceId);
+  const c=state.clients.find(c=>c.id===inv?.clientId);
+  const s=state.settings;
+  const title=`${s.bizName||'Invoice'} — ${c?.name||''} ${inv?.month||''}`.trim();
+
+  // Remove existing overlay if any
+  const existing=document.getElementById('print-overlay');
+  if(existing)existing.remove();
+
+  const overlay=document.createElement('div');
+  overlay.id='print-overlay';
+  overlay.style.cssText='position:fixed;inset:0;background:#f4f5f7;z-index:999;overflow-y:auto;-webkit-overflow-scrolling:touch;';
+  overlay.innerHTML=`
+    <div style="background:#fff;border-bottom:1px solid #e8eaef;padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10;">
+      <button onclick="document.getElementById('print-overlay').remove()" style="width:36px;height:36px;border-radius:50%;border:1px solid #e8eaef;background:#f0f1f4;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+      <div style="flex:1;font-size:15px;font-weight:600;">${title}</div>
+      <button onclick="window.print()" style="padding:8px 16px;background:#3b5bdb;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;">🖨 Print / PDF</button>
+    </div>
+    <div style="max-width:680px;margin:20px auto;padding:0 16px 60px;">
+      <div class="inv-preview">${content.replace(/<div[^>]*class="[^"]*no-print[^"]*"[^>]*>.*?<\/div>/gs,'')}</div>
+      <div style="margin-top:16px;padding:14px 16px;background:#eef2ff;border-radius:12px;font-size:13px;color:#4a5a8a;line-height:1.6;">
+        <strong>To save as PDF on iPhone/iPad:</strong><br>
+        Tap <strong>Print / PDF</strong> above → tap the Share icon in the print preview → tap <strong>Save to Files</strong> or <strong>Save to iCloud Drive</strong>
+      </div>
+    </div>`;
+
+  document.body.appendChild(overlay);
+}
+
+// ---- DRAFTS ----
+let currentDraftId=null;
+
+function updateDraftBadge(){
+  const drafts=(state.drafts||[]);
+  const badge=document.getElementById('draft-badge');
+  if(badge){badge.textContent=drafts.length;badge.style.display=drafts.length?'inline':'none';}
+}
+
+function renderDrafts(){
+  updateDraftBadge();
+  const el=document.getElementById('draft-list');if(!el)return;
+  const drafts=state.drafts||[];
+  if(!drafts.length){
+    el.innerHTML=`<div class="empty"><div class="empty-icon">📝</div><div class="empty-title">No drafts</div><div class="empty-sub">Tap "⚡ Generate" to create monthly invoices for all clients at once. Review each one before posting.</div></div>`;
+    return;
+  }
+  el.innerHTML=drafts.map(d=>{
+    const c=state.clients.find(c=>c.id===d.clientId);
+    const horses=(d.horses?.length?d.horses:(d.horse?[d.horse]:[])).filter(Boolean);
+    return`<div class="draft-item" onclick="openDraftReview('${d.id}')">
+      ${coloredAvatar(c?c.name:'?',42,'13px')}
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:15px;font-weight:600;">${c?c.name:'Unknown'}</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:2px;">${d.month||'—'} · ${horses.length?horses.join(', '):'No horses'}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:16px;font-weight:700;">${fmt(d.total)}</div>
+        <span class="draft-badge-pill">Draft</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openGenerateModal(){
+  const now=new Date();
+  document.getElementById('gen-month').value=now.toLocaleString('default',{month:'long'})+' '+now.getFullYear();
+  const last=new Date(now.getFullYear(),now.getMonth()+1,0);
+  document.getElementById('gen-due').value=last.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  const clients=state.clients.filter(c=>!c.archived);
+  const el=document.getElementById('gen-client-list');
+  el.innerHTML=clients.map(c=>{
+    const lastInv=[...state.invoices].filter(i=>i.clientId===c.id).sort((a,b)=>b.createdAt-a.createdAt)[0];
+    const horses=(c.horses||[]).join(', ')||'No horses';
+    return`<div class="gen-client-row">
+      <input type="checkbox" id="gen-c-${c.id}" checked style="width:18px;height:18px;accent-color:var(--accent);flex-shrink:0;cursor:pointer;">
+      ${coloredAvatar(c.name,36,'9px')}
+      <label for="gen-c-${c.id}" style="flex:1;cursor:pointer;">
+        <div style="font-size:14px;font-weight:500;">${c.name}</div>
+        <div style="font-size:12px;color:var(--text2);">🐴 ${horses} ${lastInv?'· Last: '+lastInv.month:'· No previous invoices'}</div>
+      </label>
+    </div>`;
+  }).join('');
+  if(!clients.length)el.innerHTML='<div style="font-size:13px;color:var(--text3);padding:8px 0;">No active clients. Add clients first.</div>';
+  openModal('modal-generate');
+}
+
+function generateDrafts(){
+  const month=document.getElementById('gen-month').value;
+  const due=document.getElementById('gen-due').value;
+  if(!month){alert('Please enter a billing month');return;}
+  const clients=state.clients.filter(c=>!c.archived);
+  const selected=clients.filter(c=>document.getElementById('gen-c-'+c.id)?.checked);
+  if(!selected.length){alert('Select at least one client');return;}
+  if(!state.drafts)state.drafts=[];
+  let created=0;
+  selected.forEach(c=>{
+    // Skip if draft already exists for this client+month
+    const exists=(state.drafts||[]).find(d=>d.clientId===c.id&&d.month===month);
+    if(exists)return;
+    // Get services from last invoice, or use defaults
+    const lastInv=[...state.invoices].filter(i=>i.clientId===c.id).sort((a,b)=>b.createdAt-a.createdAt)[0];
+    const s=state.settings;
+    const services=lastInv?lastInv.services:[
+      {name:'Monthly training',rate:s.training||0,qty:1,isTraining:true,lineTotal:s.training||0}
+    ];
+    const total=services.reduce((sum,sv)=>sum+sv.lineTotal,0);
+    state.drafts.push({
+      id:uid(),clientId:c.id,
+      horses:c.horses||[],horse:(c.horses||[])[0]||'',
+      month,due,services,total,
+      notes:'',photos:[],
+      createdAt:Date.now()
+    });
+    created++;
+  });
+  save();closeModal('modal-generate');renderDrafts();updateDraftBadge();
+  if(created>0) showPage('drafts');
+  else alert('Drafts already exist for all selected clients this month.');
+}
+
+function openDraftReview(id){
+  currentDraftId=id;
+  const d=(state.drafts||[]).find(d=>d.id===id);if(!d)return;
+  const c=state.clients.find(c=>c.id===d.clientId);
+  const s=state.settings;
+  const horseList=d.horses?.length?d.horses:(d.horse?[d.horse]:[]);
+  const rows=d.services.map(svc=>`<tr>
+    <td>${svc.name}</td>
+    <td style="text-align:center;color:var(--text2);">${svc.isTravel?svc.qty+' mi':svc.isTraining&&svc.qty>1?svc.qty+' horses':svc.isMultiplied&&svc.qty>1?'× '+svc.qty:'—'}</td>
+    <td style="text-align:right;color:var(--text2);">${(svc.isTravel||(svc.isTraining&&svc.qty>1)||(svc.isMultiplied&&svc.qty>1))?fmt(svc.rate)+((svc.isTravel)?'/mi':' ea'):fmt(svc.rate)}</td>
+    <td>${fmt(svc.lineTotal)}</td>
+  </tr>`).join('');
+  document.getElementById('draft-review-content').innerHTML=`
+    <div class="inv-preview">
+      <div class="inv-top">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div>
+            ${s.logo?`<img src="${s.logo}" style="height:36px;max-width:80px;object-fit:contain;border-radius:4px;margin-bottom:6px;display:block;">`:'' }
+            <div class="inv-biz">${s.bizName||'Your Business'}</div>
+            ${s.address?`<div class="inv-tagline">${s.address}</div>`:''}
+            ${s.contact?`<div class="inv-tagline">${s.contact}</div>`:''}
+          </div>
+          <span class="draft-badge-pill">Draft</span>
+        </div>
+      </div>
+      <div class="inv-meta-grid">
+        <div class="inv-meta-cell"><div class="inv-meta-label">Client</div><div class="inv-meta-val">${c?.name||'—'}</div></div>
+        <div class="inv-meta-cell"><div class="inv-meta-label">Period</div><div class="inv-meta-val">${d.month||'—'}</div></div>
+        <div class="inv-meta-cell"><div class="inv-meta-label">Due</div><div class="inv-meta-val">${d.due||'—'}</div></div>
+      </div>
+      ${horseList.length?`<div style="padding:10px 16px;background:#f5f5f3;border-bottom:1px solid var(--border);display:flex;flex-wrap:wrap;gap:6px;">${horseList.map(h=>`<span style="padding:4px 10px;background:#fff;border:1px solid #e0ddd8;border-radius:20px;font-size:12px;font-weight:500;color:#52586a;">${h}</span>`).join('')}</div>`:''}
+      <div class="inv-body">
+        <table class="inv-table"><thead><tr><th>Service</th><th style="text-align:center;">Qty</th><th style="text-align:right;">Rate</th><th style="text-align:right;">Total</th></tr></thead><tbody>${rows}</tbody></table>
+        <div class="inv-total"><div class="inv-total-label">Amount due</div><div class="inv-total-amt">${fmt(d.total)}</div></div>
+      </div>
+    </div>`;
+  openModal('modal-draft-review');
+}
+
+function openEditDraft(){
+  const d=(state.drafts||[]).find(d=>d.id===currentDraftId);if(!d)return;
+  // Load draft into the invoice editor
+  editingInvoiceId=null;
+  editingDraftId=currentDraftId;
+  closeModal('modal-draft-review');
+  // Build invoice services from draft
+  const s=state.settings;
+  const defaultNames=['Monthly training','Board / feed','Farrier','Travel / hauling','Vet / medical'];
+  invoiceServices=[
+    {id:uid(),name:'Monthly training',rate:s.training||0,enabled:false,isTraining:true,horses:1},
+    {id:uid(),name:'Board / feed',rate:s.board||0,enabled:false,isMultiplied:true,qty:1},
+    {id:uid(),name:'Farrier',rate:s.farrier||0,enabled:false,isMultiplied:true,qty:1},
+    {id:uid(),name:'Travel / hauling',rate:s.travel||0,enabled:false,isTravel:true,miles:0},
+    {id:uid(),name:'Vet / medical',rate:s.vet||0,enabled:false,isFlat:true},
+  ];
+  d.services.forEach(saved=>{
+    const existing=invoiceServices.find(s=>s.name===saved.name);
+    if(existing){existing.enabled=true;existing.rate=saved.rate;
+      if(existing.isTravel)existing.miles=saved.qty||0;
+      if(existing.isTraining)existing.horses=saved.qty||1;
+      if(existing.isMultiplied)existing.qty=saved.qty||1;
+    }else{invoiceServices.push({id:uid(),name:saved.name,rate:saved.rate,enabled:true,isFlat:true});}
+  });
+  document.getElementById('ci-modal-title').textContent='Edit Draft';
+  pendingPhotos=d.photos?[...d.photos]:[];
+  document.getElementById('ci-notes').value=d.notes||'';
+  renderPhotoThumbs('ci-photos',pendingPhotos,true);
+  selectedHorses=d.horses?[...d.horses]:(d.horse?[d.horse]:[]);
+  const sel=document.getElementById('ci-client');
+  sel.innerHTML='<option value="">Select client...</option>'+state.clients.filter(c=>!c.archived).map(c=>`<option value="${c.id}" ${c.id===d.clientId?'selected':''}>${c.name}</option>`).join('');
+  onInvoiceClientChange(d.clientId,selectedHorses);
+  document.getElementById('ci-month').value=d.month||'';
+  document.getElementById('ci-due').value=d.due||'';
+  renderInvoiceServices();
+  openModal('modal-create-invoice');
+}
+
+let editingDraftId=null;
+
+function deleteDraft(){
+  showConfirm('Delete draft?','This draft will be permanently deleted.',()=>{
+    state.drafts=(state.drafts||[]).filter(d=>d.id!==currentDraftId);
+    save();closeModal('modal-draft-review');renderDrafts();updateDraftBadge();
+  });
+}
+
+function postDraft(){
+  const d=(state.drafts||[]).find(d=>d.id===currentDraftId);if(!d)return;
+  const inv={
+    id:uid(),invNum:nextInvNum(),
+    clientId:d.clientId,horses:d.horses,horse:d.horse,
+    month:d.month,due:d.due,services:d.services,total:d.total,
+    notes:d.notes||'',photos:d.photos||[],
+    paid:false,createdAt:Date.now()
+  };
+  state.invoices.push(inv);
+  state.drafts=(state.drafts||[]).filter(d=>d.id!==currentDraftId);
+  save();closeModal('modal-draft-review');
+  renderDrafts();updateDraftBadge();renderInvoiceList();renderDashboard();
+  // Show the posted invoice
+  openInvoiceDetail(inv.id);
+}
+
+function renderHistory(){
+  const q=(document.getElementById('history-search')?.value||'').toLowerCase();
+  const years=[...new Set(state.invoices.map(i=>{const m=i.month||'';const match=m.match(/\d{4}/);return match?match[0]:null;}).filter(Boolean))].sort((a,b)=>b-a);
+  const filtersEl=document.getElementById('history-year-filters');
+  filtersEl.innerHTML=`<div class="filter-chip ${historyYear==='all'?'active':''}" onclick="setHistoryYear('all',this)">All years</div>`+years.map(y=>`<div class="filter-chip ${historyYear===y?'active':''}" onclick="setHistoryYear('${y}',this)">${y}</div>`).join('');
+  let invs=[...state.invoices].sort((a,b)=>b.createdAt-a.createdAt);
+  if(historyYear!=='all')invs=invs.filter(i=>(i.month||'').includes(historyYear));
+  if(q)invs=invs.filter(i=>{const c=state.clients.find(c=>c.id===i.clientId);return(c?.name||'').toLowerCase().includes(q)||(i.month||'').toLowerCase().includes(q)||(i.horse||'').toLowerCase().includes(q);});
+  const el=document.getElementById('history-list');
+  if(!invs.length){el.innerHTML=`<div class="empty"><div class="empty-icon">📚</div><div class="empty-title">No records found</div><div class="empty-sub">Your full invoice history lives here</div></div>`;return;}
+  const billed=invs.reduce((s,i)=>s+i.total,0);
+  const collected=invs.filter(i=>i.paid).reduce((s,i)=>s+i.total,0);
+  const groups={};
+  invs.forEach(inv=>{const key=inv.month||'Unknown period';if(!groups[key])groups[key]=[];groups[key].push(inv);});
+  el.innerHTML=`<div class="metric-card-wide" style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;"><div><div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;">${invs.length} invoices</div><div style="font-size:18px;font-weight:700;color:var(--accent);margin-top:2px;">${fmt(billed)} billed</div></div><div style="text-align:right;"><div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;">Collected</div><div style="font-size:18px;font-weight:700;color:var(--accent2);margin-top:2px;">${fmt(collected)}</div></div></div></div>`+
+    Object.entries(groups).map(([period,pInvs])=>{
+      const pTotal=pInvs.reduce((s,i)=>s+i.total,0);
+      return`<div style="margin-bottom:16px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><div style="font-size:14px;font-weight:600;">${period}</div><div style="font-size:13px;color:var(--text2);">${fmt(pTotal)}</div></div>${pInvs.map(inv=>{const c=state.clients.find(c=>c.id===inv.clientId);return`<div class="inv-item" style="margin-bottom:6px;" onclick="openInvoiceDetail('${inv.id}')">${coloredAvatar(c?c.name:'?',36,'9px')}<div class="inv-item-info"><div class="inv-item-name">${c?c.name:'Unknown'} ${(inv.horses?.length?inv.horses:(inv.horse?[inv.horse]:[])).filter(Boolean).join(', ') ? '· '+(inv.horses?.length?inv.horses:(inv.horse?[inv.horse]:[])).filter(Boolean).join(', ') : ''}</div><div class="inv-item-meta">Due ${inv.due||'—'}</div></div><div style="text-align:right;"><div class="inv-item-amt">${fmt(inv.total)}</div><span class="badge ${inv.paid?'badge-paid':'badge-unpaid'}">${inv.paid?'Paid':'Unpaid'}</span></div></div>`;}).join('')}</div>`;
+    }).join('');
+}
+
+function setHistoryYear(y){historyYear=y;renderHistory();}
+
+function renderDashboard(){
+  const el=document.getElementById('dash-content');if(!el)return;
+  const now=new Date();const allInv=state.invoices;
+  const unpaidInv=allInv.filter(i=>!i.paid);
+  const thisMonthInv=allInv.filter(i=>(i.month||'').includes(now.toLocaleString('default',{month:'long'}))&&(i.month||'').includes(String(now.getFullYear())));
+  const thisMonthTotal=thisMonthInv.reduce((s,i)=>s+i.total,0);
+  const totalOutstanding=unpaidInv.reduce((s,i)=>s+i.total,0);
+  const ytd=allInv.filter(i=>(i.month||'').includes(String(now.getFullYear())));
+  const ytdCollected=ytd.filter(i=>i.paid).reduce((s,i)=>s+i.total,0);
+  const ytdBilled=ytd.reduce((s,i)=>s+i.total,0);
+  const monthTotals={};
+  for(let m=5;m>=0;m--){const d=new Date(now.getFullYear(),now.getMonth()-m,1);monthTotals[d.toLocaleString('default',{month:'short'})+' '+d.getFullYear()]={billed:0};}
+  allInv.forEach(inv=>{const key=Object.keys(monthTotals).find(k=>(inv.month||'').includes(k.split(' ')[0])&&(inv.month||'').includes(k.split(' ')[1]));if(key)monthTotals[key].billed+=inv.total;});
+  const cRev={};allInv.forEach(inv=>{const c=state.clients.find(c=>c.id===inv.clientId);const name=c?.name||'Unknown';cRev[name]=(cRev[name]||0)+inv.total;});
+  const topC=Object.entries(cRev).sort((a,b)=>b[1]-a[1]).slice(0,5);const maxCR=topC[0]?.[1]||1;
+  const overdueInv=unpaidInv.filter(i=>isOverdue(i));
+  const unpaidSorted=[...unpaidInv].sort((a,b)=>{const ao=isOverdue(a)?0:1;const bo=isOverdue(b)?0:1;return ao-bo||a.createdAt-b.createdAt;}).slice(0,6);
+  const hr=now.getHours();const greet=hr<12?'Good morning':hr<17?'Good afternoon':'Good evening';
+  const maxM=Math.max(...Object.values(monthTotals).map(v=>v.billed))||1;
+  el.innerHTML=`<div class="greeting">${greet} 👋</div><div class="greeting-sub">${state.settings.bizName||'Your business'} · ${now.toLocaleString('default',{month:'long'})} ${now.getFullYear()}</div>
+    ${state.clients.filter(c=>!c.archived).length?`
+    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Quick invoice</div>
+    <div class="quick-add-bar">
+      ${state.clients.filter(c=>!c.archived).slice(0,8).map(c=>`<div class="quick-client-btn" onclick="quickAddInvoice('${c.id}')"><div class="quick-client-avatar">${initials(c.name)}</div>${c.name}</div>`).join('')}
+      <div class="quick-client-btn" onclick="openCreateInvoice()" style="color:var(--accent);border-color:var(--accent-light);background:var(--accent-light);">+ New</div>
+    </div>`:''}
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-label">This month billed</div><div class="metric-value accent"><span id="dash-month">$0.00</span></div><div class="metric-sub">${thisMonthInv.length} invoice${thisMonthInv.length!==1?'s':''}</div></div>
+      <div class="metric-card"><div class="metric-label">Outstanding</div><div class="metric-value amber"><span id="dash-outstanding">$0.00</span></div><div class="metric-sub">${unpaidInv.length} unpaid${overdueInv.length?' · '+overdueInv.length+' overdue':''}</div></div>
+      <div class="metric-card"><div class="metric-label">${now.getFullYear()} collected</div><div class="metric-value green"><span id="dash-collected">$0.00</span></div><div class="metric-sub">of ${fmt(ytdBilled)} billed</div></div>
+      <div class="metric-card"><div class="metric-label">Active clients</div><div class="metric-value">${state.clients.filter(c=>!c.archived).length}</div><div class="metric-sub">${state.clients.reduce((s,c)=>s+(c.horses?.length||0),0)} horses total</div></div>
+    </div>
+    ${unpaidInv.length?`<div class="dash-section-title">Outstanding invoices</div><div class="metric-card-wide">${unpaidSorted.map(inv=>{const c=state.clients.find(c=>c.id===inv.clientId);const ov=isOverdue(inv);const days=Math.floor((Date.now()-inv.createdAt)/86400000);const hs=(inv.horses?.length?inv.horses:(inv.horse?[inv.horse]:[])).filter(Boolean).join(', ');return`<div class="unpaid-row" onclick="openInvoiceDetail('${inv.id}')"><div style="flex:1;"><div style="font-size:14px;font-weight:500;${ov?'color:var(--danger);':''}">${c?.name||'Unknown'}${hs?' · '+hs:''} ${ov?'⚠️':''}</div><div style="font-size:12px;color:var(--text2);">${inv.invNum?inv.invNum+' · ':''}${inv.month||'—'} · ${ov?'Overdue':days===0?'Today':days+'d ago'}</div></div><div style="font-size:15px;font-weight:700;color:${ov?'var(--danger)':'var(--amber)'};">${fmt(inv.total)}</div></div>`;}).join('')}${unpaidInv.length>6?`<div style="font-size:13px;color:var(--text3);padding:8px 0 0;text-align:center;">+${unpaidInv.length-6} more</div>`:''}</div>`:`<div class="metric-card-wide" style="text-align:center;padding:20px;"><div style="font-size:28px;margin-bottom:6px;">✅</div><div style="font-size:14px;font-weight:600;color:var(--accent2);">All caught up!</div><div style="font-size:13px;color:var(--text2);margin-top:3px;">No outstanding invoices</div></div>`}
+    <div class="dash-section-title">Revenue — last 6 months</div>
+    <div class="metric-card-wide">${Object.entries(monthTotals).map(([k,v])=>`<div class="bar-row"><div class="bar-label">${k}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round((v.billed/maxM)*100)}%"></div></div><div class="bar-amt">${fmt(v.billed)}</div></div>`).join('')}</div>
+    <div class="dash-section-title">Revenue by client</div>
+    <div class="metric-card-wide">${topC.length?topC.map(([name,rev])=>`<div class="bar-row"><div class="bar-label">${name}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round((rev/maxCR)*100)}%;background:var(--accent2)"></div></div><div class="bar-amt">${fmt(rev)}</div></div>`).join(''):'<div style="font-size:13px;color:var(--text3);">No data yet</div>'}</div>`;
+  // Animate numbers after render
+  requestAnimationFrame(()=>{
+    animateNum(document.getElementById('dash-month'),thisMonthTotal);
+    animateNum(document.getElementById('dash-outstanding'),totalOutstanding);
+    animateNum(document.getElementById('dash-collected'),ytdCollected);
+  });
+}
+
+function populateSettingsFields(){
+  const s=state.settings;
+  const fields={
+    'set-biz':s.bizName||'',
+    'set-owner':s.ownerName||'',
+    'set-address':s.address||'',
+    'set-contact':s.contact||'',
+    'set-training':s.training||'',
+    'set-board':s.board||'',
+    'set-farrier':s.farrier||'',
+    'set-travel':s.travel||'',
+    'set-vet':s.vet||'',
+    'set-note':s.footerNote||''
+  };
+  Object.entries(fields).forEach(([id,val])=>{
+    const el=document.getElementById(id);
+    if(el&&document.activeElement!==el)el.value=val;
+  });
+}
+
+function renderSettings(){
+  populateSettingsFields();
+  renderPaymentToggles();
+  renderAccentSwatches();
+  updateLastBackupLabel();
+  const darkToggle=document.getElementById('dark-toggle');
+  if(darkToggle)darkToggle.classList.toggle('on',document.body.classList.contains('dark-mode'));
+  if(state.settings.logo)showLogoPreview(state.settings.logo);
+  // Attach blur-to-save on every settings input — fires when user taps away
+  ['set-biz','set-owner','set-address','set-contact','set-training','set-board','set-farrier','set-travel','set-vet','set-note'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el&&!el._blurAttached){
+      el.addEventListener('blur',()=>saveSettings());
+      el._blurAttached=true;
+    }
+  });
+}
+
+function renderPaymentToggles(){
+  const el=document.getElementById('payment-toggles');if(!el)return;
+  el.innerHTML=['Venmo','Zelle','Cash','Check'].map(p=>`<div class="setting-row"><div class="setting-label">${p}</div><div class="toggle ${state.settings.payments?.[p]?'on':''}" onclick="togglePayment('${p}')"><div class="toggle-knob"></div></div></div>`).join('');
+}
+
+function togglePayment(p){
+  if(!state.settings.payments)state.settings.payments={};
+  state.settings.payments[p]=!state.settings.payments[p];
+  save();
+  // Update just the toggle that was tapped, no full re-render
+  document.querySelectorAll('#payment-toggles .toggle').forEach(el=>{
+    const method=el.closest('.setting-row')?.querySelector('.setting-label')?.textContent;
+    if(method)el.classList.toggle('on',!!state.settings.payments[method]);
+  });
+}
+
+function saveSettings(){
+  const s=state.settings;
+  const active=document.activeElement;
+  s.bizName=document.getElementById('set-biz').value;
+  s.ownerName=document.getElementById('set-owner').value;
+  s.address=document.getElementById('set-address').value;
+  s.contact=document.getElementById('set-contact').value;
+  s.training=parseFloat(document.getElementById('set-training').value)||0;
+  s.board=parseFloat(document.getElementById('set-board').value)||0;
+  s.farrier=parseFloat(document.getElementById('set-farrier').value)||0;
+  s.travel=parseFloat(document.getElementById('set-travel').value)||0;
+  s.vet=parseFloat(document.getElementById('set-vet').value)||0;
+  s.footerNote=document.getElementById('set-note').value;
+  save();
+  // Only show confirmation if triggered by button tap (not blur), to avoid layout shift
+  if(!active||!active.id||!active.id.startsWith('set-')){
+    const msg=document.getElementById('settings-saved-msg');
+    if(msg){msg.style.display='block';setTimeout(()=>{msg.style.display='none';},2000);}
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  try {
+    load();
+    initAppearance();
+    renderDashboard();
+    updateDraftBadge();
+    requestAnimationFrame(()=>requestAnimationFrame(()=>document.getElementById('page-dashboard')?.classList.add('visible')));
+    renderSettings();
+    settingsRendered = true;
+    document.querySelectorAll('.nav-tab').forEach((tab, i) => {
+      const pages = ['dashboard','clients','invoices','drafts','history','settings'];
+      tab.onclick = () => showPage(pages[i]);
+    });
+    document.querySelectorAll('.modal-overlay').forEach(m => {
+      m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); });
+    });
+  } catch(e) {
+    console.error('Init error:', e);
+    document.body.innerHTML += '<div style="padding:40px;text-align:center;color:#e03131;font-family:sans-serif;"><strong>Something went wrong loading the app.</strong><br><br>Try opening the file in Safari and refreshing.</div>';
+  }
+});
+</script>
+</body>
+</html>
